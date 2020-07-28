@@ -13,7 +13,7 @@
 using namespace std;
 
 #include "setupfinal.h"
-#include "resize.h"
+#include "hw3.h"
 
 //MAIN BODY HERE
 int main()
@@ -84,7 +84,6 @@ int main()
     ofname = "result.bmp";
     cout << "Enter bmp output filename. " << endl;
     cout << "Leave blank for default outfile name (\"result.bmp\"): ";
-    // cin.ignore();
     getline(cin, tempofname);
     if (!tempofname.empty()) ofname = tempofname;
     ofstream outfile(ofname, ios::out | ios::binary);
@@ -101,8 +100,8 @@ int main()
 }
 
 /* Bilinear Resizing Algorithm. Uses Bilinear interpolation to
- * approximate a 
-*/
+ * resize an image. 
+ */
 double **resize_bilinear(double **f, double **new_f, int old_w, int old_h, int new_w, int new_h)
 {
     int i, j;
@@ -146,6 +145,9 @@ double **resize_bilinear(double **f, double **new_f, int old_w, int old_h, int n
     return new_f;
 }
 
+/* Bicubic Resizing Algorithm. Uses Bicubic interpolation to
+ * resize an image. 
+ */
 double** resize_bicubic(double **f, double **new_f, int old_w, int old_h, int new_w, int new_h)
 {
     int i, j;
@@ -183,11 +185,18 @@ double** resize_bicubic(double **f, double **new_f, int old_w, int old_h, int ne
     return new_f;
 }
 
+/* Weighted average approximation of bicubic interpolation.
+ * Sufficiently interior points on the picture are guaranteed to
+ * have an interpolation value between 0 and 1.
+*/
 double bicubic_weighted(double al, double fa, double fb, double fc, double fd)
 {
     return fa + (1+al)*(fb-fa) + (1+al)*(al)*(fc-2*fb+fa)/2 + (1+al)*(al)*(al-1)*(fd-3*fc+3*fb-fa)/6;
 }
 
+/* Helper function for weighted average approximation of bicubic interpolation.
+ * Constructs the necessary 16-pixel lattice to calculate the interpolation value.
+ */
 double bw_from_lattice(double **f, double al, double bt, int i, int j)
 {
     double fa, fb, fc, fd;
@@ -198,6 +207,8 @@ double bw_from_lattice(double **f, double al, double bt, int i, int j)
     return bicubic_weighted(bt, fa, fb, fc, fd);
 }
 
+/* Bicubic interpolation algorithm
+ */
 double bicubic_interp(double al, double fa, double fb, double fc, double fd)
 {
     double lz, lo, ltw, lth;
@@ -208,6 +219,11 @@ double bicubic_interp(double al, double fa, double fb, double fc, double fd)
     return lz*fa + lo*fb + ltw*fc + lth*fd;
 }
 
+/* Helper function for bicubic interpolation.
+ * Constructs the necessary 16-pixel lattice to calculate the interpolation value.
+ * Checks whether the given coords correspond to an edge of the image,
+ * and bounds the resulting interpolation value between 0 and 1.
+ */
 double bc_from_lattice(double **f, double al, double bt, int i, int j, int w, int h)
 {
     int im, ip, ipp, jm, jp, jpp;
@@ -227,6 +243,7 @@ double bc_from_lattice(double **f, double al, double bt, int i, int j, int w, in
     return bnd(bicubic_interp(bt, fa, fb, fc, fd), 0.0, 1.0);
 }
 
+// Helper function, bounds between 2 values
 double bnd(double v, double minV, double maxV)
 {
     return min(max(v, minV), maxV);
