@@ -13,7 +13,7 @@
 using namespace std;
 
 #include "setupfinal.h"
-#include "hw3.h"
+#include "resize.h"
 
 //MAIN BODY HERE
 int main()
